@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Animated,
+  Easing,
 } from 'react-native';
 import { Header, Input } from 'react-native-elements';
 import { FontAwesome } from '@expo/vector-icons';
@@ -16,23 +17,42 @@ import { FontAwesome } from '@expo/vector-icons';
 const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
   const [commentsVisible, setCommentsVisible] = useState(false);
   const commentsHeight = useRef(new Animated.Value(0)).current;
+  const rotation = useRef(new Animated.Value(0)).current;
+
 
   const toggleComments = () => {
     if (!commentsVisible) {
       setCommentsVisible(true);
+      Animated.timing(rotation, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+  
       Animated.timing(commentsHeight, {
         toValue: 1,
         duration: 500,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }).start();
     } else {
+      Animated.timing(rotation, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+  
       Animated.timing(commentsHeight, {
         toValue: 0,
         duration: 500,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }).start(() => setCommentsVisible(false));
     }
   };
+  
 
   const commentsTotalHeight = useMemo(() => {
     return 16 + 8 + commentsList.length * 65;
@@ -52,7 +72,21 @@ const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
         <Text style={styles.creatorName}>{creator}</Text>
 
         <TouchableOpacity onPress={toggleComments} style={styles.commentsToggleButton}>
-          <FontAwesome name={commentsVisible ? 'chevron-up' : 'chevron-down'} size={20} color="#800000" />
+        <Animated.View
+  style={{
+    transform: [
+      {
+        rotate: rotation.interpolate({
+          inputRange: [0, 1],
+          outputRange: ['0deg', '180deg'],
+        }),
+      },
+    ],
+  }}
+>
+  <FontAwesome name="chevron-down" size={20} color="#800000" />
+</Animated.View>
+
         </TouchableOpacity>
 
       </View>
@@ -345,6 +379,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    marginBottom: 12,
   },
   moreButton: {
     flexDirection: 'row', // Add this line to make the container a row
