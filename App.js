@@ -1,9 +1,43 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View, Text, Image, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useState, useRef, useMemo } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StatusBar,
+  Animated,
+} from 'react-native';
 import { Header, Input } from 'react-native-elements';
 import { FontAwesome } from '@expo/vector-icons';
 
+
 const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
+  const [commentsVisible, setCommentsVisible] = useState(false);
+  const commentsHeight = useRef(new Animated.Value(0)).current;
+
+  const toggleComments = () => {
+    if (!commentsVisible) {
+      setCommentsVisible(true);
+      Animated.timing(commentsHeight, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Animated.timing(commentsHeight, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: false,
+      }).start(() => setCommentsVisible(false));
+    }
+  };
+
+  const commentsTotalHeight = useMemo(() => {
+    return 12 + 8 + commentsList.length * 50;
+  }, [commentsList]);
+
   return (
     <View style={styles.postContainer}>
       <View style={styles.postTitleContainer}>
@@ -16,11 +50,29 @@ const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
       <View style={styles.postFooter}>
         <Image source={{ uri: creatorImage }} style={styles.creatorImage} />
         <Text style={styles.creatorName}>{creator}</Text>
+        <TouchableOpacity onPress={toggleComments} style={styles.commentsToggleButton}>
+          <Text style={styles.commentsToggleButtonText}>{commentsVisible ? 'Hide' : 'Show'} Comments</Text>
+        </TouchableOpacity>
       </View>
-      <Comments commentsList={commentsList} />
+      <Animated.View
+        style={[
+          styles.commentsContainer,
+          {
+            height: commentsHeight.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, commentsTotalHeight],
+            }),
+          },
+        ]}
+      >
+        <Comments commentsList={commentsList} />
+      </Animated.View>
     </View>
   );
 };
+
+
+
 
 const Comment = ({ author, text, authorImage, likes }) => {
   return (
@@ -31,36 +83,63 @@ const Comment = ({ author, text, authorImage, likes }) => {
         <Text style={styles.commentText}>{text}</Text>
       </View>
       <View style={styles.commentActions}>
-        <TouchableOpacity style={styles.likeButton}>
-          <FontAwesome name="heart" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.comment}>{likes}</Text>
+        <View style={styles.likesContainer}>
+          <Text style={styles.likesCounter}>{likes}</Text>
+          <TouchableOpacity style={styles.likeButton}>
+            <FontAwesome name="heart" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
 };
 
+
+
 const Comments = ({ commentsList }) => {
+  const [showComments, setShowComments] = useState(false);
+  const animationValue = useRef(new Animated.Value(0)).current;
+
+  const toggleComments = () => {
+    setShowComments(!showComments);
+    Animated.timing(animationValue, {
+      toValue: showComments ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const animatedHeight = animationValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, commentsList.length * 60],
+  });
+
+  const animatedOpacity = animationValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
+  });
+
   return (
-    <View style={styles.commentsContainer}>
-      <View style={styles.commentsHeader}>
+    <View>
+      <TouchableOpacity onPress={toggleComments} style={styles.moreButton}>
         <Text style={styles.commentsTitle}>Comments</Text>
-      </View>
-      {commentsList.map((comment, index) => (
-        <Comment
-          key={index}
-          author={comment.author}
-          authorImage={comment.authorImage}
-          text={comment.text}
-          likes={comment.likes}
-        />
-      ))}
-      <TouchableOpacity style={styles.moreButton}>
-        <FontAwesome name="ellipsis-h" size={20} color="#FFFFFF" />
+        <FontAwesome name={showComments ? 'chevron-up' : 'chevron-down'} size={20} color="#FFFFFF" />
       </TouchableOpacity>
+      <Animated.View style={[styles.commentsContainer, { height: animatedHeight, opacity: animatedOpacity }]}>
+        {commentsList.map((comment, index) => (
+          <Comment
+            key={index}
+            author={comment.author}
+            authorImage={comment.authorImage}
+            text={comment.text}
+            likes={comment.likes}
+          />
+        ))}
+      </Animated.View>
     </View>
   );
 };
+
 
 const generatePosts = (n) => {
   const posts = [];
@@ -145,6 +224,24 @@ const App = () => {
 
 
 const styles = StyleSheet.create({
+  postFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+
+  // ... (previous styles)
+
+  commentsToggleButton: {
+    marginLeft: 8,
+  },
+  commentsToggleButtonText: {
+    fontSize: 14,
+    color: '#800000',
+    textDecorationLine: 'underline',
+  },
   container: {
     flex: 1,
     backgroundColor: '#202020',
@@ -213,6 +310,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     marginBottom: 4,
+    marginLeft: 5,
   },
   commentContainer: {
     flexDirection: 'row',
@@ -239,11 +337,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   commentActions: {
+    flex: 1,
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
+    marginRight: 4,
   },
   likeButton: {
-    marginRight: 16,
+    marginLeft: 12, // Change marginRight to marginLeft
+  },
+  likesCounter: {
+    alignSelf: 'flex-end',
+    color: '#ffffff',
+  },
+  likesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   replyButton: {
     marginRight: 16, // Add this line to add space between the title and the button
