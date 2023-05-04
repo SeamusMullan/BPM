@@ -35,7 +35,7 @@ const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
   };
 
   const commentsTotalHeight = useMemo(() => {
-    return 12 + 8 + commentsList.length * 50;
+    return 16 + 8 + commentsList.length * 65;
   }, [commentsList]);
 
   return (
@@ -50,10 +50,13 @@ const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
       <View style={styles.postFooter}>
         <Image source={{ uri: creatorImage }} style={styles.creatorImage} />
         <Text style={styles.creatorName}>{creator}</Text>
+
         <TouchableOpacity onPress={toggleComments} style={styles.commentsToggleButton}>
-          <Text style={styles.commentsToggleButtonText}>{commentsVisible ? 'Hide' : 'Show'} Comments</Text>
+          <FontAwesome name={commentsVisible ? 'chevron-up' : 'chevron-down'} size={20} color="#800000" />
         </TouchableOpacity>
+
       </View>
+      
       <Animated.View
         style={[
           styles.commentsContainer,
@@ -70,7 +73,6 @@ const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
     </View>
   );
 };
-
 
 
 
@@ -97,48 +99,22 @@ const Comment = ({ author, text, authorImage, likes }) => {
 
 
 const Comments = ({ commentsList }) => {
-  const [showComments, setShowComments] = useState(false);
-  const animationValue = useRef(new Animated.Value(0)).current;
-
-  const toggleComments = () => {
-    setShowComments(!showComments);
-    Animated.timing(animationValue, {
-      toValue: showComments ? 0 : 1,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const animatedHeight = animationValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, commentsList.length * 60],
-  });
-
-  const animatedOpacity = animationValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-
   return (
     <View>
-      <TouchableOpacity onPress={toggleComments} style={styles.moreButton}>
-        <Text style={styles.commentsTitle}>Comments</Text>
-        <FontAwesome name={showComments ? 'chevron-up' : 'chevron-down'} size={20} color="#FFFFFF" />
-      </TouchableOpacity>
-      <Animated.View style={[styles.commentsContainer, { height: animatedHeight, opacity: animatedOpacity }]}>
-        {commentsList.map((comment, index) => (
-          <Comment
-            key={index}
-            author={comment.author}
-            authorImage={comment.authorImage}
-            text={comment.text}
-            likes={comment.likes}
-          />
-        ))}
-      </Animated.View>
+      <Text style={styles.commentsTitle}>Comments</Text>
+      {commentsList.map((comment, index) => (
+        <Comment
+          key={index}
+          author={comment.author}
+          authorImage={comment.authorImage}
+          text={comment.text}
+          likes={comment.likes}
+        />
+      ))}
     </View>
   );
 };
+
 
 
 const generatePosts = (n) => {
@@ -235,7 +211,9 @@ const styles = StyleSheet.create({
   // ... (previous styles)
 
   commentsToggleButton: {
-    marginLeft: 8,
+    alignSelf: 'center',
+    marginRight: 16,
+    marginLeft: 175
   },
   commentsToggleButtonText: {
     fontSize: 14,
