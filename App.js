@@ -13,7 +13,6 @@ import {
 import { Header, Input } from 'react-native-elements';
 import { FontAwesome } from '@expo/vector-icons';
 
-
 const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
   const [commentsVisible, setCommentsVisible] = useState(false);
   const commentsHeight = useRef(new Animated.Value(0)).current;
@@ -108,8 +107,6 @@ const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
   );
 };
 
-
-
 const Comment = ({ author, text, authorImage, likes }) => {
   return (
     <View style={styles.commentContainer}>
@@ -130,8 +127,6 @@ const Comment = ({ author, text, authorImage, likes }) => {
   );
 };
 
-
-
 const Comments = ({ commentsList }) => {
   return (
     <View>
@@ -148,8 +143,6 @@ const Comments = ({ commentsList }) => {
     </View>
   );
 };
-
-
 
 const generatePosts = (n) => {
   const posts = [];
@@ -229,9 +222,6 @@ const App = () => {
     </View>
   );
 };
-
-
-
 
 const styles = StyleSheet.create({
   postFooter: {
