@@ -1,9 +1,9 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, Image, TouchableOpacity, StatusBar } from 'react-native';
 import { Header, Input } from 'react-native-elements';
 import { FontAwesome } from '@expo/vector-icons';
 
-const Post = ({ imageUri, title, creator, creatorImage }) => {
+const Post = ({ imageUri, title, creator, creatorImage, commentsList }) => {
   return (
     <View style={styles.postContainer}>
       <View style={styles.postTitleContainer}>
@@ -17,12 +17,12 @@ const Post = ({ imageUri, title, creator, creatorImage }) => {
         <Image source={{ uri: creatorImage }} style={styles.creatorImage} />
         <Text style={styles.creatorName}>{creator}</Text>
       </View>
-      <Comments />
+      <Comments commentsList={commentsList} />
     </View>
   );
 };
 
-const Comment = ({ author, text, authorImage }) => {
+const Comment = ({ author, text, authorImage, likes }) => {
   return (
     <View style={styles.commentContainer}>
       <Image source={{ uri: authorImage }} style={styles.commentAuthorImage} />
@@ -34,72 +34,115 @@ const Comment = ({ author, text, authorImage }) => {
         <TouchableOpacity style={styles.likeButton}>
           <FontAwesome name="heart" size={20} color="#FFFFFF" />
         </TouchableOpacity>
+        <Text style={styles.comment}>{likes}</Text>
       </View>
     </View>
   );
 };
 
-const Comments = () => {
+const Comments = ({ commentsList }) => {
   return (
     <View style={styles.commentsContainer}>
       <View style={styles.commentsHeader}>
         <Text style={styles.commentsTitle}>Comments</Text>
       </View>
-      {/* Add your comments here */}
-      <Comment author="Author1" text="This is a super cool comment" authorImage="author-image-url"></Comment>
-      <Comment author="Author2" text="This is another great comment" authorImage="author-image-url"></Comment>
-      <Comment author="Author3" text="I love this post!" authorImage="author-image-url"></Comment>
+      {commentsList.map((comment, index) => (
+        <Comment
+          key={index}
+          author={comment.author}
+          authorImage={comment.authorImage}
+          text={comment.text}
+          likes={comment.likes}
+        />
+      ))}
       <TouchableOpacity style={styles.moreButton}>
-          <FontAwesome name="ellipsis-h" size={20} color="#FFFFFF"/>
-        </TouchableOpacity>
+        <FontAwesome name="ellipsis-h" size={20} color="#FFFFFF" />
+      </TouchableOpacity>
     </View>
   );
 };
 
+const generatePosts = (n) => {
+  const posts = [];
+
+  for (let i = 1; i <= n; i++) {
+    const post = {
+      imageUri: `https://picsum.photos/seed/post${i}/400/600`,
+      title: `Post ${i} Title`,
+      creator: `Creator ${i} Name`,
+      creatorImage: `https://picsum.photos/seed/creator${i}/40/40`,
+      likes: Math.floor(Math.random() * 1000),
+      commentsList: [],
+    };
+
+    const numComments = Math.floor(Math.random() * 10);
+
+    for (let j = 1; j <= numComments; j++) {
+      const comment = {
+        author: `Commenter ${j}`,
+        authorImage: `https://picsum.photos/seed/commenter${j}/40/40`,
+        text: `This is a comment on post ${i}`,
+        likes: Math.floor(Math.random() * 100),
+      };
+
+      post.commentsList.push(comment);
+    }
+
+    posts.push(post);
+  }
+
+  return posts;
+};
 
 const App = () => {
+
+  const posts = generatePosts(10);
+
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" animated={true} hidden={true} />
       <Header
-        centerComponent={
-          <Input
-            placeholder="Search"
-            leftIcon={<FontAwesome name="search" size={20} color="white" />}
-            inputStyle={{ color: 'white' }}
-            inputContainerStyle={{ borderBottomWidth: 0 }}
-            containerStyle={{ width: '100%', paddingBottom: 0 }}
-          />
-        }
+        centerComponent={{
+          text: 'BPM',
+          style: { color: '#fff', fontSize: 24, fontWeight: 'bold', marginTop:36, alignSelf:"center"},
+          numberOfLines: 1
+        }}
+
         containerStyle={{
           backgroundColor: '#800000',
         }}
+
+
+        leftComponent={
+          <TouchableOpacity>
+            <FontAwesome name="search" size={20} color="white" marginLeft={16} marginTop={36}/>
+          </TouchableOpacity>
+        }
       />
       <ScrollView contentContainerStyle={styles.mainContent}>
         <Text style={styles.heading}>Your Feed</Text>
         {/* Add your content here */}
-        <Post
-          imageUri="post-image-url"
-          title="Post Title"
-          creator="Creator Name"
-          creatorImage="creator-image-url"
-        />
-        <Post
-          imageUri="post-image-url"
-          title="Post Title"
-          creator="Creator Name"
-          creatorImage="creator-image-url"
-        />
-        <Post
-          imageUri="post-image-url"
-          title="Post Title"
-          creator="Creator Name"
-          creatorImage="creator-image-url"
-        />
+        {/* Make a list of n posts */}
+        {posts.map((post, index) => (
+          <Post
+            key={index}
+            imageUri={post.imageUri}
+            title={post.title}
+            creator={post.creator}
+            creatorImage={post.creatorImage}
+            likes={post.likes}
+            commentsList={post.commentsList}
+          />
+        ))}
+
         {/* Add more posts here */}
       </ScrollView>
     </View>
   );
 };
+
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -113,11 +156,11 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 16,
-    textAlign: 'left',
+    marginBottom: 24,
+    textAlign: 'center',
   },
   postContainer: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   postTitleContainer: {
     flexDirection: 'row', // Add this line to make the container a row
